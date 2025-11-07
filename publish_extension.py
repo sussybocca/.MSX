@@ -1,12 +1,40 @@
-# publish_extension.py
 import os
 import subprocess
 import sys
+
+# List of suspicious keywords to scan for in extension files
+SUSPICIOUS_KEYWORDS = ["os.system", "subprocess.Popen", "eval", "exec", "open(", "requests"]
+
+def scan_for_malicious_code(extension_path):
+    print(f"Scanning '{extension_path}' for potentially malicious code...")
+    issues_found = False
+
+    for root, _, files in os.walk(extension_path):
+        for file in files:
+            if file.endswith((".py", ".msx", ".js")):  # adjust extensions as needed
+                file_path = os.path.join(root, file)
+                try:
+                    with open(file_path, "r", encoding="utf-8") as f:
+                        content = f.read()
+                        for keyword in SUSPICIOUS_KEYWORDS:
+                            if keyword in content:
+                                print(f"⚠ Suspicious keyword '{keyword}' found in {file_path}")
+                                issues_found = True
+                except Exception as e:
+                    print(f"Could not read {file_path}: {e}")
+
+    if issues_found:
+        print("Warning: Potentially unsafe code detected. Review before publishing.")
+    else:
+        print("No obvious malicious code found.")
 
 def publish_extension(extension_path, repo_url):
     if not os.path.exists(extension_path):
         print(f"Error: Extension folder '{extension_path}' not found.")
         return
+
+    # Scan extension for suspicious code
+    scan_for_malicious_code(extension_path)
 
     # Change directory to the extension folder
     os.chdir(extension_path)
