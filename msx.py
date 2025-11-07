@@ -1,40 +1,39 @@
 #!/usr/bin/env python
 import sys
 import os
-import subprocess
 import tempfile
-from runner import run_msx_file  # keeps MSX logic for .msx files
+from runner import run_msx_file  # Make sure runner.py is in the same folder
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: msx <script_or_msx_file> [args...]")
+        print("Usage:")
+        print("  msx run <msx_file>     # Run an MSX script")
+        print("  msx <command>          # Run a single MSX command directly")
         sys.exit(1)
 
-    target = sys.argv[1]
-    args = sys.argv[2:]
+    command_or_file = sys.argv[1]
 
-    # If the file ends with .msx, run it with our runner
-    if target.endswith(".msx"):
-        if not os.path.exists(target):
-            print(f"Error: MSX file '{target}' not found")
+    # If using "run", treat next argument as a file
+    if command_or_file == "run":
+        if len(sys.argv) < 3:
+            print("Usage: msx run <msx_file>")
             sys.exit(1)
-        run_msx_file(target)
-
-    # If the file ends with .py, run it as a normal Python script
-    elif target.endswith(".py"):
-        if not os.path.exists(target):
-            print(f"Error: Python script '{target}' not found")
+        msx_file = sys.argv[2]
+        if not os.path.exists(msx_file):
+            print(f"Error: File not found: {msx_file}")
             sys.exit(1)
-        # Pass all extra arguments to the script
-        subprocess.run([sys.executable, target, *args])
+        run_msx_file(msx_file)
+        return
 
-    else:
-        # If not a file, treat it as a single MSX command
-        with tempfile.NamedTemporaryFile("w+", suffix=".msx", delete=False) as tmp:
-            tmp.write(target + "\n")
-            tmp_path = tmp.name
-        run_msx_file(tmp_path)
-        os.remove(tmp_path)
+    # Otherwise, treat it as a single command typed inline
+    temp_file = tempfile.NamedTemporaryFile("w+", suffix=".msx", delete=False)
+    try:
+        temp_file.write(command_or_file + "\n")
+        temp_file.flush()
+        temp_file.close()
+        run_msx_file(temp_file.name)
+    finally:
+        os.remove(temp_file.name)
 
 if __name__ == "__main__":
     main()
