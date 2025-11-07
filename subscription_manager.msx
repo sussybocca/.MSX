@@ -1,0 +1,4 @@
+# subscription manager bot
+function manage_subscriptions(user) {
+    print "Checking subscription rules for $user..."
+}
