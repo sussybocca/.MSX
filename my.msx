@@ -1,0 +1,5 @@
+msx subscribe 24
+msx subscription check
+msx rate
+msx restart
+msx create custom subscriptions manager
